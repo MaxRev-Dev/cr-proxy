@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.31911.260
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CRProxy", "src\CRProxy.csproj", "{3A6C4A8F-7F65-4B12-9AA5-767CA1F159C1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CRProxy.Tests", "tests\CRProxy.Tests.csproj", "{5BEF8970-7A8D-4398-AFCB-00F5D04AD81D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3A6C4A8F-7F65-4B12-9AA5-767CA1F159C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A6C4A8F-7F65-4B12-9AA5-767CA1F159C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A6C4A8F-7F65-4B12-9AA5-767CA1F159C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A6C4A8F-7F65-4B12-9AA5-767CA1F159C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5BEF8970-7A8D-4398-AFCB-00F5D04AD81D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5BEF8970-7A8D-4398-AFCB-00F5D04AD81D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5BEF8970-7A8D-4398-AFCB-00F5D04AD81D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5BEF8970-7A8D-4398-AFCB-00F5D04AD81D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2B2B0352-40AC-4D6E-95C0-26E1853FB288}
+	EndGlobalSection
+EndGlobal
