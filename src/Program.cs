@@ -1,8 +1,8 @@
-﻿using CRProxy.Host;
+﻿using CRProxy.Configuration.Binders;
+using CRProxy.Configuration.Routes;
+using CRProxy.Host;
 using CRProxy.Services;
 using Microsoft.Extensions.DependencyInjection;
-
-[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("CRProxy.Tests")]
 
 using (var host = new ProxyHost())
 {
@@ -11,9 +11,14 @@ using (var host = new ProxyHost())
     builder.WithOptions(x =>
     {
         x.Port = 3000;
+
+        var mappings = new EndpointsConfigurationBinder();
+        if (mappings.IsValidConfig)
+        { 
+            x.Routes = new RoutesRepository(mappings.Endpoints);
+        }
     });
 
-    host.Services.AddSingleton<RequestLogger>();
 
     await host.Run();
 }
