@@ -1,7 +1,8 @@
-﻿namespace CRProxy.Server
+﻿using System.Net;
+
+namespace CRProxy.Server;
+
+internal interface IRequestRouter
 {
-    internal interface IRequestRouter
-    {
-        Task Route(Client source);
-    }
+    Task Route(Client source, DeviceIdRequestPartial requestPartial);
 }

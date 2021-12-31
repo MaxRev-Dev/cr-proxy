@@ -8,22 +8,41 @@ namespace CRProxy.Server
         public const int HeaderStart = 3;
         public const int DeviceIdSize = 4;
         public const int HeaderSize = HeaderStart + DeviceIdSize;
-        internal DeviceIdRequestPartial RetrivePacket(Socket socket, int? bufferSize = default)
+
+        public bool RetrivePacket(Socket socket, out DeviceIdRequestPartial result, int? bufferSize = default)
         {
             var buffer = new byte[bufferSize ?? HeaderSize]; // we can use shared array pool here
             int received = 0;
             try
             {
-                while (received < HeaderSize)
-                    received = socket.Receive(buffer);
+                // this code does not handle HTTP requests
+                // so we will just close connection on other requests
+                received = socket.Receive(buffer);
                 var span = buffer.AsSpan();
-                var deviceId = MemoryMarshal.Read<long>(span.Slice(HeaderStart, DeviceIdSize));
+                var deviceId = MemoryMarshal.Read<uint>(span.Slice(HeaderStart, DeviceIdSize));
 
-                return new DeviceIdRequestPartial(received, deviceId, buffer);
+                result = new DeviceIdRequestPartial(received, deviceId, buffer);
+                return true;
             }
-            catch (ObjectDisposedException) { }
-            catch (SocketException) { }
-            return new DeviceIdRequestPartial(received, -1, default);
+            catch (ArgumentOutOfRangeException)
+            {
+                // format error in memory marshal
+            }
+            catch (ArgumentException)
+            {
+                // format error in memory marshal
+            }
+            catch (ObjectDisposedException)
+            {
+                // should be a closed connection
+            }
+            catch (SocketException)
+            {
+                // some problems with socket connection
+            }
+            // this 
+            result = new(received, null, null);
+            return false;
         }
     }
 }

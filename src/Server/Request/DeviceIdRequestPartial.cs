@@ -2,15 +2,17 @@
 {
     internal struct DeviceIdRequestPartial
     {
-        private readonly long? deviceId;
-        private readonly byte[]? buffer;
-        private readonly int received;
-
-        public DeviceIdRequestPartial(int received, long? deviceId, byte[]? buffer)
+        public DeviceIdRequestPartial(int received, uint? deviceId, byte[]? buffer)
         {
-            this.deviceId = deviceId;
-            this.buffer = buffer;
-            this.received = received;
+            DeviceId = deviceId;
+            Buffer = buffer;
+            Received = received;
         }
+
+        public uint? DeviceId { get; }
+        public byte[]? Buffer { get; }
+        public int Received { get; }
+
+        public bool IsValid() => Buffer != default && DeviceId.HasValue;
     }
 }

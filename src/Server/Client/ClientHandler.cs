@@ -1,28 +1,34 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using CRProxy.Configuration.Binders;
+using CRProxy.Configuration.Routes;
+using Microsoft.Extensions.DependencyInjection;
 using System.Net.Sockets;
 
 namespace CRProxy.Server
 {
     class ClientHandler : IClientHandler
     {
-        private readonly IServiceProvider _serviceProvider;
         private TcpMessageToClientIdParser _requestParser;
-        private IRequestRouter? _router;
+        private IRequestRouter _router;
 
-        public ClientHandler(IServiceProvider serviceProvider)
+        public ClientHandler()
         {
-            _serviceProvider = serviceProvider;
+            // normally this should be injected 
+            _requestParser = new TcpMessageToClientIdParser();
+            var endpointsMap = new EndpointsConfigurationBinder();
+            _router = new RequestRouter(new RoutesRepository(endpointsMap.Endpoints));
         }
 
-        public Task AcceptSocketAsync(Socket acceptedSocket)
+        public async Task AcceptSocketAsync(Socket acceptedSocket)
         {
-            _router = _serviceProvider.GetService<IRequestRouter>();
-            var client = new Client(acceptedSocket, _serviceProvider);
+            using var client = new Client(acceptedSocket);
 
-            var packetPartial = _requestParser.RetrivePacket(client.Socket);
-
-            // TODO: proceed with route negotiation
-            return _router != default ? _router.Route(client) : Task.CompletedTask;
+            var successRead = _requestParser.RetrivePacket(client.Socket, out var packetPartial);
+            if (!successRead)
+            {
+                client.CloseConnection(); 
+                return;
+            }
+            await _router.Route(client, packetPartial);
         }
     }
 }
