@@ -49,9 +49,11 @@ public class RouteMapping
             var partials = source.Split(':');
             if (partials.Length != 2)
                 throw new FormatException("Invalid endpoint format");
-            var address = Dns.GetHostAddresses(partials[0]).FirstOrDefault(); 
             if (!int.TryParse(partials[1], out var port))
                 throw new FormatException("Invalid port");
+            var address = Dns.GetHostAddresses(partials[0]).FirstOrDefault();
+            if (address is null)
+                throw new FormatException("Dns record of address not found");
             EndPoint = new IPEndPoint(address, port);
             _to = value;
         }
