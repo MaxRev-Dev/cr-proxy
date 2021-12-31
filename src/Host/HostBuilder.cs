@@ -27,7 +27,7 @@ internal class HostBuilder : IHostBuilder
     /// Builds server instance for this host
     /// </summary>
     /// <returns></returns>
-    public IProxyServer Build(IServiceCollection services)
+    public IProxyServer Build()
     {
         return new ProxyServer(OptionsContext);
     }
