@@ -17,7 +17,7 @@ public class ServerTests
     /// Ensures the client-proxy-service request cycle works as espected. 
     /// </summary>
     [Fact]
-    public async void Server_routes_device_to_listener()
+    public async Task Server_routes_device_to_listener()
     {
         var port = 10000;
         const string requestMessage = "Request";
@@ -43,7 +43,7 @@ public class ServerTests
         var serviceStub = Task.Run(() =>
         {
             var serviceListener = new TcpListener(remoteEndpoint);
-            serviceListener.Start();  
+            serviceListener.Start();
 
             while (!serviceListener.Pending())
                 Thread.Sleep(10);
@@ -59,7 +59,9 @@ public class ServerTests
             serverStream.Write(Encoding.UTF8.GetBytes(responseMessage));
             serverStream.Flush();
         });
-
+        
+        /// allow socket to start
+        await Task.Delay(100);
 
         using var client = new TcpClient();
         client.Connect(System.Net.IPAddress.Loopback, port);
