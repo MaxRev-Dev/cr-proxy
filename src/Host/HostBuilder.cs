@@ -1,7 +1,6 @@
 
 using CRProxy.Configuration;
 using CRProxy.Server;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace CRProxy.Host;
 

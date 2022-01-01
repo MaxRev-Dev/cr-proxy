@@ -54,7 +54,7 @@ public class ServerTests
             var buffer = new byte[100];
             var received = serverStream.Read(buffer);
             Assert.True(received > 0);
-            Assert.Equal(requestMessage, Encoding.UTF8.GetString(buffer.AsSpan(0, received));
+            Assert.Equal(requestMessage, Encoding.UTF8.GetString(buffer.AsSpan(0, received)));
             // write server response
             serverStream.Write(Encoding.UTF8.GetBytes(responseMessage));
             serverStream.Flush();
