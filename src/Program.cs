@@ -1,8 +1,6 @@
 ﻿using CRProxy.Configuration.Binders;
 using CRProxy.Configuration.Routes;
 using CRProxy.Host;
-using CRProxy.Services;
-using Microsoft.Extensions.DependencyInjection;
 
 using (var host = new ProxyHost())
 {

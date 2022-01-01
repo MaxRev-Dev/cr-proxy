@@ -4,6 +4,8 @@ using CRProxy.Server;
 using System;
 using System.Linq;
 using System.Net.Sockets;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -11,63 +13,84 @@ namespace CRProxy.Tests;
 
 public class ServerTests
 {
+    /// <summary>
+    /// Ensures the client-proxy-service request cycle works as espected. 
+    /// </summary>
     [Fact]
-    public async Task Server_routes_devices_to_listeners()
+    public async void Server_routes_device_to_listener()
     {
-        using var host = new ProxyHost();
         var port = 10000;
-        host.Builder.WithOptions(x =>
-        {
-            x.Address = System.Net.IPAddress.Loopback;
-            x.Port = (uint)port;
-        });
-        _ = host.Run();
-
-        await Task.Yield();
-
+        const string requestMessage = "Request";
+        const string responseMessage = "Some awesome test";
         var binder = new EndpointsConfigurationBinder();
 
-        var entities = binder.Endpoints.ToList();
-        var listeners = entities.Select(x => x.EndPoint!).Distinct()
-            .Select(x => new TcpListener(x)).ToList();
-        foreach (var listener in listeners)
-            listener.Start();// start stub servers
-        for (int i = 0; i < entities.Count; i++)
+        var routeInfo = binder.Endpoints.First();
+        var remoteEndpoint = routeInfo.EndPoint!;
+
+        var host = new ProxyHost();
+        // run proxy
+        var proxy = Task.Run(async () =>
         {
-            using var client = new TcpClient();
-            client.Connect(System.Net.IPAddress.Loopback, port);
-
-            uint? deviceId = entities[i].FromValue.HasValue ?
-                entities[i].FromValue :  // get mapping or wildcard defaults
-                (uint?)Random.Shared.Next();
-
-            using var outStream
-                = client.GetStream();
-
-            // create payload
-            var buffer = new byte[TcpMessageToClientIdParser.HeaderSize];
-            TestHelpers.CopyIdToBuffer(deviceId!.Value, buffer);
-
-            // send packet
-            outStream.Write(buffer);
-            outStream.Flush(); 
-
-
-            // receive on some of servers
-            foreach (var listener in listeners)
+            host.Builder.WithOptions(x =>
             {
-                if (listener.Pending())
-                {
-                    var socket = listener.AcceptSocket();
-                    var stream = new NetworkStream(socket);
-                    var buff = new byte[TcpMessageToClientIdParser.HeaderSize];
-                    var received = stream.Read(buff);
-                    Assert.Equal(TcpMessageToClientIdParser.HeaderSize, received);
-                }
-            }
-        }
+                x.Address = System.Net.IPAddress.Loopback;
+                x.Port = (uint)port;
+            });
+            await host.Run();
+        });
 
-        foreach (var listener in listeners) listener.Stop();
+        // run a simple stub for this request
+        var serviceStub = Task.Run(() =>
+        {
+            var serviceListener = new TcpListener(remoteEndpoint);
+            serviceListener.Start();  
+
+            while (!serviceListener.Pending())
+                Thread.Sleep(10);
+            // NOTE: we do not forwarding and expecting ID!!!
+            // read message
+            var clientSocket = serviceListener.AcceptSocket();
+            var serverStream = new NetworkStream(clientSocket, false);
+            var buffer = new byte[100];
+            var received = serverStream.Read(buffer);
+            Assert.True(received > 0);
+            Assert.Equal(requestMessage, Encoding.UTF8.GetString(buffer.AsSpan(0, received));
+            // write server response
+            serverStream.Write(Encoding.UTF8.GetBytes(responseMessage));
+            serverStream.Flush();
+        });
+
+
+        using var client = new TcpClient();
+        client.Connect(System.Net.IPAddress.Loopback, port);
+
+        uint? deviceId = routeInfo.FromValue.HasValue ?
+            routeInfo.FromValue :  // get mapping or wildcard defaults
+            (uint?)Random.Shared.Next();
+
+        using var outStream = client.GetStream();
+
+        // create payload
+        var buffer = new byte[TcpMessageToClientIdParser.HeaderSize];
+        TestHelpers.CopyIdToBuffer(deviceId!.Value, buffer);
+
+        // send packet
+        outStream.Write(buffer);
+        outStream.Write(Encoding.UTF8.GetBytes(requestMessage));
+        outStream.Flush();
+
+
+        buffer = new byte[100];
+
+        // read server response
+        int messageSize = outStream.Read(buffer);
+        Assert.True(messageSize > 0);
+
+        var result = Encoding.UTF8.GetString(buffer.AsSpan(0, messageSize));
+        Assert.Equal(responseMessage, result);
+
+        await serviceStub;
+        host.Server!.Stop();
+        await proxy;
     }
-
 }
