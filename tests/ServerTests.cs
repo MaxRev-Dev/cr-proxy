@@ -47,19 +47,23 @@ public class ServerTests
 
             while (!serviceListener.Pending())
                 Thread.Sleep(10);
-            // NOTE: we do not forwarding and expecting ID!!!
+
             // read message
             var clientSocket = serviceListener.AcceptSocket();
             var serverStream = new NetworkStream(clientSocket, false);
-            var buffer = new byte[100];
+
+            var buffer = new byte[TcpMessageToClientIdParser.HeaderSize];
             var received = serverStream.Read(buffer);
+            Assert.Equal(received, TcpMessageToClientIdParser.HeaderSize);
+            buffer = new byte[100];
+            received = serverStream.Read(buffer);
             Assert.True(received > 0);
             Assert.Equal(requestMessage, Encoding.UTF8.GetString(buffer.AsSpan(0, received)));
             // write server response
             serverStream.Write(Encoding.UTF8.GetBytes(responseMessage));
             serverStream.Flush();
         });
-        
+
         /// allow socket to start
         await Task.Delay(100);
 
@@ -82,9 +86,8 @@ public class ServerTests
         outStream.Flush();
 
 
+        // read server response 
         buffer = new byte[100];
-
-        // read server response
         int messageSize = outStream.Read(buffer);
         Assert.True(messageSize > 0);
 

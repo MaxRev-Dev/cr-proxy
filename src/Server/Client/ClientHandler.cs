@@ -38,19 +38,20 @@ namespace CRProxy.Server
                     return Task.CompletedTask;
                 }
 
-                return SendResult(acceptedSocket, routeResult.EndPoint!);
+                return SendResult(acceptedSocket, routeResult.EndPoint!, packetPartial);
             }
         }
 
-        private Task SendResult(Socket acceptedSocket, IPEndPoint endpoint)
+        private Task SendResult(Socket acceptedSocket, IPEndPoint endpoint, DeviceIdRequestPartial packet)
         {
             using var clientTarget = new TcpClient();
             clientTarget.Connect(endpoint);
 
             using var nsSource = new NetworkStream(acceptedSocket);
             var nsTarget = clientTarget.GetStream();
-
-            // FIXME: should we forward entire header?
+            
+            // send buffered header to server
+            nsTarget.Write(packet.Buffer!);
 
             // we will not use Stream.CopyToAsync() or Stream.Read() 
             // as they block this thread until the connection is closed 
