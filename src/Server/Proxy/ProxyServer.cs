@@ -8,7 +8,8 @@ namespace CRProxy.Server
         private readonly ProxyOptions _options;
         private TcpListener? _listener;
         private IClientHandler? _clientHandler;
-        private bool _isActive, _isDisposed, _initialized;
+        private volatile bool _isActive;
+        private bool _isDisposed, _initialized;
 
         public ProxyServer(ProxyOptions options)
         {
@@ -118,6 +119,8 @@ namespace CRProxy.Server
             if (!_isActive)
                 return;
             _isActive = false;
+            // allow to the acceptor loop to finish
+            Thread.Sleep(50); 
             _listener?.Stop();
         }
 
